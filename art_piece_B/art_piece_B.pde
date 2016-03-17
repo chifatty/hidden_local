@@ -1,5 +1,6 @@
 import ddf.minim.*;
 import nl.tue.id.oocsi.*;
+import processing.io.*;
 
 
 // Server
@@ -20,6 +21,10 @@ final String client = Art_Piece_B;
 final String Music_Hello = "hello.wav";
 final String Music_Goodbye = "goodbye.wav";
 
+// IO
+final int Pin_Gallery = 14;
+final int Pin_Home = 15;
+
 // Global variables
 int press_count = 0;
 boolean normal = false;
@@ -32,6 +37,10 @@ OOCSI oocsi;
 boolean play_music = true;
 String music_lead = Art_Piece_None; 
 String music_file = client + ".wav";
+
+// Play Music Home
+int home_phase = 1;
+boolean play_music_home = false;
 
 // Interrupt
 boolean been_interrupt = true;
@@ -72,6 +81,9 @@ boolean doing_lightup = false;
 float lightup_ratio = 1;
 int lightup_time = 0;
 
+// check pin
+int check_pin_time = 0;
+
 void setup()
 {
   size(100, 100);
@@ -81,6 +93,7 @@ void setup()
   oocsi.subscribe(Channel_Gallery);
   oocsi.subscribe(Channel_Home);
   oocsi.subscribe(Channel_Visitor);
+  analogSetup();
 }
 
 void draw()
@@ -93,6 +106,8 @@ void draw()
   ansGoodbye();
   lightup();
   playMusic();
+  playMusicHome();
+  checkPin();
 }
 
 void playMusic()
@@ -115,6 +130,45 @@ void playMusic()
   if (player != null) {
     int value = int(player.left.level() * 255);
     background(value);
+    analogWrite(value);
+  }
+}
+
+void playMusicHome()
+{
+  if (doing_interrupt || doing_say_hello || doing_ans_hello || 
+    doing_play_farewell || doing_say_goodbye || doing_ans_goodbye || doing_lightup)
+    return;
+  if (!play_music_home)
+    return;
+  if (home_phase == 0) {
+    println("Play B.wav @ home");
+    home_phase++;
+    minim.stop();
+    player = minim.loadFile("B.wav");
+    player.play();
+  }
+  else if (!player.isPlaying()) {
+    if (home_phase == 1) {
+      println("Play B_support_vacuum.wav @ home");
+      home_phase++;
+      minim.stop();
+      player = minim.loadFile("B_support_vacuum.wav");
+      player.play();
+    }
+    else {
+      println("Play B_dying.wav @ home");
+      minim.stop();
+      player = minim.loadFile("B_dying.wav");
+      player.play();
+      player.loop();
+    }
+  }
+  if (player != null) {
+    int value = int(player.left.level() * 255);
+    background(value);
+    analogWrite(value);
+    
   }
 }
 
@@ -165,6 +219,7 @@ void sayHello()
     doing_say_hello = true;
     say_hello_count = 2;
     say_hello_time = millis();
+    minim.stop();
     player = minim.loadFile(Music_Hello);
     player.play();
   }
@@ -181,7 +236,9 @@ void sayHello()
       setupLightup();
     }
   }
-  background(int(player.left.level() * 255));
+  int value = int(player.left.level() * 255);
+  background(value);
+  analogWrite(value);
 }
 
 void setupAnsHello()
@@ -200,6 +257,7 @@ void ansHello()
     println("start ans hello");
     doing_ans_hello = true;
     ans_hello_time = millis();
+    minim.stop();
     player = minim.loadFile(Music_Hello);
     //player.play();
   }
@@ -213,7 +271,9 @@ void ansHello()
     println("done ans hello");
     setupLightup();
   }
-  background(int(player.left.level() * 255));
+  int value = int(player.left.level() * 255);
+  background(value);
+  analogWrite(value);
 }
 
 
@@ -232,6 +292,7 @@ void playFarewell()
   if (!doing_play_farewell) {
     println("start play farewell");
     doing_play_farewell = true;
+    minim.stop();
     player = minim.loadFile(client + "_farewell_special.wav");
     player.play();
   }
@@ -244,7 +305,9 @@ void playFarewell()
     else
       setupAnsGoodbye();
   }
-  background(int(player.left.level() * 255));
+  int value = int(player.left.level() * 255);
+  background(value);
+  analogWrite(value);
 }
 
 void setupSayGoodbye()
@@ -263,6 +326,7 @@ void sayGoodbye()
     println("start say goodbye");
     doing_say_goodbye = true;
     say_goodbye_time = millis();
+    minim.stop();
     player = minim.loadFile(Music_Goodbye);
     player.play();
     player.loop(1);
@@ -272,7 +336,9 @@ void sayGoodbye()
     doing_say_goodbye = false;
     println("done say goodbye");
   }
-  background(int(player.left.level() * 255));
+  int value = int(player.left.level() * 255);
+  background(value);
+  analogWrite(value);
 }
 
 void setupAnsGoodbye()
@@ -291,6 +357,7 @@ void ansGoodbye()
     println("start ans goodbye");
     doing_ans_goodbye = true;
     ans_goodbye_time = millis();
+    minim.stop();
     player = minim.loadFile(Music_Goodbye);
   }
   if (millis() - ans_goodbye_time > 4000 && !player.isPlaying()) {
@@ -303,7 +370,9 @@ void ansGoodbye()
     println("done ans goodbye");
     setupLightup();
   }
-  background(int(player.left.level() * 255));
+  int value = int(player.left.level() * 255);
+  background(value);
+  analogWrite(value);
 }
 
 void setupLightup()
@@ -330,10 +399,12 @@ void lightup()
     else if (millis() - lightup_time < 6000){
       int value = abs(int(lightup_ratio * sin(float((millis() - lightup_time)) / 2000.0 * HALF_PI) * 255));
       background(value);
+      analogWrite(value);
     }
     else {
       int value = abs(int(lightup_ratio * 255));
       background(value);
+      analogWrite(value);
     }
   }
 }
@@ -382,7 +453,10 @@ void homeChannel(OOCSIEvent event)
   if (act.equals("enter")) {
     if (who.equals(client)) {
       position = Position_Home;
+      home_phase = 0;
       lightup_ratio = 1;
+      play_music = false;
+      play_music_home = true;
       setupInterrupt();
       setupSayHello();
     }
@@ -391,7 +465,7 @@ void homeChannel(OOCSIEvent event)
   }
   else if (act.equals("leave") && position.equals(Position_Home)) {
     if (who.equals(client)) {
-      play_music = false;
+      play_music_home = false;
       position = Position_None;
       setupInterrupt();
       setupSayGoodbye();
@@ -419,5 +493,52 @@ void visitorChannel(OOCSIEvent event)
     }
     music_file = client + "_support_" + who + ".wav";
     return;
+  }
+}
+
+void checkPin()
+{
+  if (millis() - check_pin_time > 2000) {
+    check_pin_time = millis();
+    int pin_gallery = GPIO.digitalRead(Pin_Gallery);
+    int pin_home = GPIO.digitalRead(Pin_Home);
+    println("Gallery - Home :" + pin_gallery + " - " + pin_home); 
+    if (position.equals(Position_None)) {
+      if (pin_gallery = GPIO.HIGH) {
+        oocsi.channel(Channel_Gallery).data("who", client).data("act", "enter");
+      }
+      else if (pin_home = GPIO.HIGH) {
+        oocsi.channel(Channel_Home).data("who", client).data("act", "enter");
+      }
+    }
+    else if (position.equals(Position_Gallery)) {
+      if (pin_gallery = GPIO.LOW) {
+        oocsi.channel(Channel_Gallery).data("who", client).data("act", "leave");
+      }
+    }
+    else if (position.equals(Position_Home)) {
+      if (pin_home = GPIO.LOW) {
+        oocsi.channel(Channel_Home).data("who", client).data("act", "leave");
+      }
+    }
+  }
+}
+
+void analogSetup() {
+  for (int pin = 3; pin <= 7; pin++) {
+    GPIO.pinMode(pin, GPIO.OUTPUT);
+    GPIO.digitalWrite(pin, GPIO.LOW);
+  }
+}
+
+void analogWrite(int value) {
+  for (int pin = 3; pin <= 7; pin++) {
+    int output = value & (1 << (pin - 1));
+    if (output != 0) {
+      GPIO.digitalWrite(pin, GPIO.HIGH);
+    }
+    else {
+      GPIO.digitalWrite(pin, GPIO.LOW);
+    }
   }
 }
