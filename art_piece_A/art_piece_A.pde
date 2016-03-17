@@ -560,7 +560,7 @@ void analogSetup() {
 
 void analogWrite(int value) {
   for (int pin = 3; pin <= 7; pin++) {
-    int output = value & (1 << (pin - 1));
+    int output = value & (1 << pin);
     if (output != 0) {
       GPIO.digitalWrite(pin, GPIO.HIGH);
     }
