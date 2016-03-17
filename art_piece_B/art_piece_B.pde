@@ -391,13 +391,13 @@ void lightup()
     lightup_time = millis();
   }
   else {
-    if (millis() - lightup_time > 7000) {
+    if (millis() - lightup_time > 14000) {
       need_lightup = false;
       doing_lightup = false;
       println("done lightup");
     }
-    else if (millis() - lightup_time < 6000){
-      int value = abs(int(lightup_ratio * sin(float((millis() - lightup_time)) / 2000.0 * HALF_PI) * 255));
+    else if (millis() - lightup_time < 12000){
+      int value = abs(int(lightup_ratio * sin(float((millis() - lightup_time)) / 4000.0 * HALF_PI) * 255));
       background(value);
       analogWrite(value);
     }
