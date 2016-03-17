@@ -29,13 +29,7 @@ AudioPlayer player;
 Minim minim;
 OOCSI oocsi;
 
-// Play Music
-boolean play_music = true;
-String music_lead = Art_Piece_None; 
-String music_file = client + ".wav";
-
 // Play Music Home
-int home_phase = 1;
 boolean play_music_home = false;
 
 // Interrupt
@@ -44,27 +38,10 @@ boolean need_interrupt = false;
 boolean doing_interrupt = false;
 int interrupt_time = 0;
 
-// Play farewell
-boolean need_play_farewell = false;
-boolean doing_play_farewell = false;
-boolean leave_after_farewell = false;
-
-// Say Hello
-boolean need_say_hello = false;
-boolean doing_say_hello = false;
-int say_hello_time = 0;
-int say_hello_count = 0;
-
 // Ans Hello
 boolean need_ans_hello = false;
 boolean doing_ans_hello = false;
 int ans_hello_time = 0;
-
-// Say Goodbye
-boolean need_say_goodbye = false;
-boolean doing_say_goodbye = false;
-int say_goodbye_time = 0;
-int say_goodbye_count = 0;
 
 // Ans Goodbye
 boolean need_ans_goodbye = false;
@@ -98,8 +75,8 @@ void draw()
 
 void playMusicHome()
 {
-  if (doing_interrupt || doing_say_hello || doing_ans_hello || 
-    doing_play_farewell || doing_say_goodbye || doing_ans_goodbye || doing_lightup)
+  if (doing_interrupt || doing_ans_hello || 
+      doing_ans_goodbye || doing_lightup)
     return;
   if (!play_music_home)
     return;
