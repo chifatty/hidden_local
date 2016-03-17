@@ -145,7 +145,7 @@ void playMusicHome()
     println("Play B.wav @ home");
     home_phase++;
     minim.stop();
-    player = minim.loadFile("B.wav");
+    player = minim.loadFile("B_home.wav");
     player.play();
   }
   else if (!player.isPlaying()) {
