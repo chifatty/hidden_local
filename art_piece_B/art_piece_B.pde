@@ -409,6 +409,22 @@ void lightup()
   }
 }
 
+void enterGallery()
+{
+  position = Position_Gallery;
+  lightup_ratio = 0.5;
+  play_music = true;
+  setupInterrupt();
+  setupSayHello();
+}
+
+void leaveGallery()
+{
+  position = Position_None;
+  setupInterrupt();
+  setupPlayFarewell();
+  leave_after_farewell = true;
+}
 
 void galleryChannel(OOCSIEvent event) 
 {
@@ -417,11 +433,7 @@ void galleryChannel(OOCSIEvent event)
   println("Gallery:" + who + " - " + act);
   if (act.equals("enter")) {
     if (who.equals(client)) {
-      position = Position_Gallery;
-      lightup_ratio = 0.5;
-      play_music = true;
-      setupInterrupt();
-      setupSayHello();
+      enterGallery();
     }
     else if (position.equals(Position_Gallery)) {
       lightup_ratio = 1;
@@ -431,10 +443,7 @@ void galleryChannel(OOCSIEvent event)
   }
   else if (act.equals("leave") && position.equals(Position_Gallery)) {
     if (who.equals(client)) {
-      position = Position_None;
-      setupInterrupt();
-      setupPlayFarewell();
-      leave_after_farewell = true;
+      leaveGallery();
     }
     else {
       lightup_ratio = 1;
@@ -445,6 +454,25 @@ void galleryChannel(OOCSIEvent event)
   }
 }
 
+void enterHome()
+{
+  position = Position_Home;
+  home_phase = 0;
+  lightup_ratio = 1;
+  play_music = false;
+  play_music_home = true;
+  setupInterrupt();
+  setupSayHello();
+}
+
+void leaveHome()
+{
+  play_music_home = false;
+  position = Position_None;
+  setupInterrupt();
+  setupSayGoodbye();
+}
+
 void homeChannel(OOCSIEvent event) 
 {
   String who = event.getString("who");
@@ -452,23 +480,14 @@ void homeChannel(OOCSIEvent event)
   println("Home:" + who + " - " + act);
   if (act.equals("enter")) {
     if (who.equals(client)) {
-      position = Position_Home;
-      home_phase = 0;
-      lightup_ratio = 1;
-      play_music = false;
-      play_music_home = true;
-      setupInterrupt();
-      setupSayHello();
+      enterHome();
     }
     else if (position.equals(Position_Home)) {
     }
   }
   else if (act.equals("leave") && position.equals(Position_Home)) {
     if (who.equals(client)) {
-      play_music_home = false;
-      position = Position_None;
-      setupInterrupt();
-      setupSayGoodbye();
+      leaveHome();
     }
     else {
     }
@@ -502,23 +521,30 @@ void checkPin()
     check_pin_time = millis();
     int pin_gallery = GPIO.digitalRead(Pin_Gallery);
     int pin_home = GPIO.digitalRead(Pin_Home);
-    println("Gallery - Home :" + pin_gallery + " - " + pin_home); 
+    println("Gallery - Home :" + pin_gallery + " - " + pin_home);
+    println("Position: " + position);
     if (position.equals(Position_None)) {
-      if (pin_gallery = GPIO.HIGH) {
-        oocsi.channel(Channel_Gallery).data("who", client).data("act", "enter");
+      if (pin_gallery == GPIO.HIGH) {
+        println("send enter gallery");
+        enterGallery();
+        oocsi.channel(Channel_Gallery).data("who", client).data("act", "enter").send();
+        println("sent enter gallery");
       }
-      else if (pin_home = GPIO.HIGH) {
-        oocsi.channel(Channel_Home).data("who", client).data("act", "enter");
+      else if (pin_home == GPIO.HIGH) {
+        enterHome();
+        oocsi.channel(Channel_Home).data("who", client).data("act", "enter").send();
       }
     }
     else if (position.equals(Position_Gallery)) {
-      if (pin_gallery = GPIO.LOW) {
-        oocsi.channel(Channel_Gallery).data("who", client).data("act", "leave");
+      if (pin_gallery == GPIO.LOW) {
+        leaveGallery();
+        oocsi.channel(Channel_Gallery).data("who", client).data("act", "leave").send();
       }
     }
     else if (position.equals(Position_Home)) {
-      if (pin_home = GPIO.LOW) {
-        oocsi.channel(Channel_Home).data("who", client).data("act", "leave");
+      if (pin_home == GPIO.LOW) {
+        leaveHome();
+        oocsi.channel(Channel_Home).data("who", client).data("act", "leave").send();
       }
     }
   }
@@ -529,6 +555,8 @@ void analogSetup() {
     GPIO.pinMode(pin, GPIO.OUTPUT);
     GPIO.digitalWrite(pin, GPIO.LOW);
   }
+  GPIO.pinMode(Pin_Gallery, GPIO.INPUT);
+  GPIO.pinMode(Pin_Home, GPIO.INPUT);
 }
 
 void analogWrite(int value) {
