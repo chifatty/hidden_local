@@ -18,16 +18,16 @@ final int Pin_C = 4;
 
 
 // Global variables
-int press_count = 0;
+int check_pin_time = 0;
 OOCSI oocsi;
 
 void setup()
 {
   size(100, 100);
   // Setup IO
-  GPIO.pinMode(Pin_A, GPIO.INTPUT);
-  GPIO.pinMode(Pin_B, GPIO.INTPUT);
-  GPIO.pinMode(Pin_C, GPIO.INTPUT);
+  GPIO.pinMode(Pin_A, GPIO.INPUT);
+  GPIO.pinMode(Pin_B, GPIO.INPUT);
+  GPIO.pinMode(Pin_C, GPIO.INPUT);
   oocsi = new OOCSI(this, client, Server);
 } 
 
@@ -49,4 +49,8 @@ void checkPin()
     else if (GPIO.digitalRead(Pin_C) == GPIO.HIGH) {
       oocsi.channel(Channel_Visitor).data("who", "C").data("act", "lead").send();
     }
+    else {
+      oocsi.channel(Channel_Visitor).data("who", "None").data("act", "lead").send();
+    }
+  }
 }
