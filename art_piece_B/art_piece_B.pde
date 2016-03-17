@@ -105,6 +105,7 @@ void playMusic()
   if (been_interrupt) {
     been_interrupt = false;
     println("start play music:" + music_file);
+    minim.stop();
     player = minim.loadFile(music_file);
     if (player != null) {
       player.play();
