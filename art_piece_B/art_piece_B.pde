@@ -27,11 +27,13 @@ final int Pin_Home = 15;
 
 // Global variables
 int press_count = 0;
-boolean normal = false;
 String position = Position_None;
 AudioPlayer player;
 Minim minim;
 OOCSI oocsi;
+
+// system_state 
+boolean system_state = false;
 
 // Play Music
 boolean play_music = true;
@@ -98,17 +100,62 @@ void setup()
 
 void draw()
 {
-  interrupt();
-  sayHello();
-  ansHello();
-  playFarewell();
-  sayGoodbye();
-  ansGoodbye();
-  lightup();
-  playMusic();
-  playMusicHome();
-  checkPin();
+  if (system_state) {
+    interrupt();
+    sayHello();
+    ansHello();
+    playFarewell();
+    sayGoodbye();
+    ansGoodbye();
+    lightup();
+    playMusic();
+    playMusicHome();
+    checkPin();
+  }
 }
+
+void reset()
+{
+  play_music = true;
+  music_lead = Art_Piece_None; 
+  music_file = client + ".wav";
+
+  // Play Music Home
+  home_phase = 1;
+  play_music_home = false;
+
+  // Interrupt
+  been_interrupt = true;
+  need_interrupt = false;
+  doing_interrupt = false;
+
+  // Play farewell
+  need_play_farewell = false;
+  doing_play_farewell = false;
+  leave_after_farewell = false;
+
+  // Say Hello
+  need_say_hello = false;
+  doing_say_hello = false;
+
+  // Ans Hello
+  need_ans_hello = false;
+  doing_ans_hello = false;
+
+  // Say Goodbye
+  need_say_goodbye = false;
+  doing_say_goodbye = false;
+
+  // Ans Goodbye
+  need_ans_goodbye = false;
+  doing_ans_goodbye = false;
+
+  // light up
+  need_lightup = false;
+  doing_lightup = false;
+  lightup_ratio = 1;
+}
+
 
 void playMusic()
 {
@@ -431,7 +478,16 @@ void galleryChannel(OOCSIEvent event)
   String who = event.getString("who");
   String act = event.getString("act");
   println("Gallery:" + who + " - " + act);
-  if (act.equals("enter")) {
+  if (act.equals("on")) {
+    reset();
+    oocsi.channel(Channel_Gallery).data("who", client).data("act", "goingOn").send();
+    system_state = true;
+  }
+  else if (act.equals("off")) {
+    oocsi.channel(Channel_Gallery).data("who", client).data("act", "goingOff").send();
+    system_state = false;
+  }
+  else if (act.equals("enter")) {
     if (who.equals(client)) {
       enterGallery();
     }

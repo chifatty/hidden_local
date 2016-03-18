@@ -29,6 +29,9 @@ AudioPlayer player;
 Minim minim;
 OOCSI oocsi;
 
+// system_state 
+boolean system_state = false;
+
 // Play Music Home
 boolean play_music_home = false;
 
@@ -66,11 +69,13 @@ void setup()
 
 void draw()
 {
-  interrupt();
-  ansHello();
-  ansGoodbye();
-  lightup();
-  // playMusicHome();
+  if (system_state) {
+    interrupt();
+    ansHello();
+    ansGoodbye();
+    lightup();
+    // playMusicHome();
+  }
 }
 
 void playMusicHome()
@@ -234,7 +239,15 @@ void homeChannel(OOCSIEvent event)
   String who = event.getString("who");
   String act = event.getString("act");
   println("Home:" + who + " - " + act);
-  if (act.equals("enter")) {
+  if (act.equals("on")) {
+    oocsi.channel(Channel_Gallery).data("who", client).data("act", "goingOn").send();
+    system_state = true;
+  }
+  else if (act.equals("off")) {
+    oocsi.channel(Channel_Gallery).data("who", client).data("act", "goingOff").send();
+    system_state = false;
+  }
+  else if (act.equals("enter")) {
     lightup_ratio = 0.5;
     play_music_home = true;
     setupInterrupt();
