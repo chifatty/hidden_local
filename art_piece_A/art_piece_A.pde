@@ -431,6 +431,7 @@ void galleryChannel(OOCSIEvent event)
   String act = event.getString("act");
   println("Gallery:" + who + " - " + act);
   if (act.equals("enter")) {
+    play_music = true;
     if (who.equals(client)) {
       enterGallery();
     }
@@ -478,6 +479,7 @@ void homeChannel(OOCSIEvent event)
   String act = event.getString("act");
   println("Home:" + who + " - " + act);
   if (act.equals("enter")) {
+    play_music = false;
     if (who.equals(client)) {
       enterHome();
     }
