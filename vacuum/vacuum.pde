@@ -69,8 +69,8 @@ void setup()
 
 void draw()
 {
+  interrupt();
   if (system_state) {
-    interrupt();
     ansHello();
     ansGoodbye();
     lightup();
@@ -246,6 +246,7 @@ void homeChannel(OOCSIEvent event)
   else if (act.equals("off")) {
     oocsi.channel(Channel_Gallery).data("who", client).data("act", "goingOff").send();
     system_state = false;
+    setupInterrupt();
   }
   else if (act.equals("enter")) {
     lightup_ratio = 0.5;

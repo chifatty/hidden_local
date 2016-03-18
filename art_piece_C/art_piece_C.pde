@@ -100,8 +100,8 @@ void setup()
 
 void draw()
 {
+  interrupt();
   if (system_state) {
-    interrupt();
     sayHello();
     ansHello();
     playFarewell();
@@ -484,6 +484,7 @@ void galleryChannel(OOCSIEvent event)
   else if (act.equals("off")) {
     oocsi.channel(Channel_Gallery).data("who", client).data("act", "goingOff").send();
     system_state = false;
+    setupInterrupt();
   }
   else if (act.equals("enter")) {
     play_music = true;
