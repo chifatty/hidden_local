@@ -536,6 +536,7 @@ void homeChannel(OOCSIEvent event)
   println("Home:" + who + " - " + act);
   if (act.equals("enter")) {
     play_music = false;
+    setupInterrupt();
     if (who.equals(client)) {
       enterHome();
     }
